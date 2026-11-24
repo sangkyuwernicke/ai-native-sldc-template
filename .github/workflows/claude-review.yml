@@ -1,0 +1,32 @@
+name: claude-review
+# Deploy 전 단계: 모든 PR에 에이전트 리뷰 적용. 사람은 risk:high 라벨 PR에 집중한다.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            이 PR을 정확성, 보안, 성능, 테스트 누락 관점에서 리뷰하라.
+            - 인증/결제/DB 마이그레이션/시크릿/워크플로 변경이 있으면 `risk:high` 라벨을 붙이고 이유를 코멘트로 남겨라.
+            - 그렇지 않으면 `risk:low` 라벨을 붙여라.
+            - 구체적 이슈는 인라인 코멘트로, 요약은 PR 코멘트 1개로 남겨라.
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr edit:*)"

@@ -1,0 +1,7 @@
+# 사람의 판단이 필요한 경로는 소유자 승인이 필수 (브랜치 보호의 "Require review from Code Owners")
+*                    @sangkyuwernicke
+/.github/            @sangkyuwernicke
+/.claude/            @sangkyuwernicke
+/CLAUDE.md           @sangkyuwernicke
+/docs/specs/         @sangkyuwernicke
+/scripts/deploy.sh   @sangkyuwernicke

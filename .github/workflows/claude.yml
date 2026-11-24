@@ -1,0 +1,33 @@
+name: claude-build
+# Build 단계: 이슈/PR 코멘트에 @claude 를 멘션하면 에이전트가 브랜치+PR을 만든다.
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+    runs-on: ubuntu-latest
+    # 최소 권한: main 직접 push/배포 권한 없음 (브랜치 보호가 추가로 막는다)
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # 구현 전 plan.md 를 먼저 올려 승인받도록 유도
+          claude_args: |
+            --append-system-prompt "구현 전에 docs/plans/<이슈번호>-plan.md 를 작성해 PR 코멘트로 승인을 요청하고, 승인 후 구현하라. CLAUDE.md 의 검증 명령을 모두 통과시켜라."

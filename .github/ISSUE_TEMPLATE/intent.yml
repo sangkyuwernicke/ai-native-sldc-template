@@ -1,0 +1,37 @@
+name: Intent (intent.md)
+description: Plan 단계 - 아이디어/문제를 intent 로 기록합니다. 제품 오너 승인 후 Design 으로 진행.
+labels: [intent]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 문제 / 배경
+      description: 누가, 어떤 상황에서, 무엇이 불편한가
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: 기대 결과
+      description: 완료되었을 때 무엇이 달라지는가 (측정 가능하게)
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: 제약 / 비범위
+      description: 보안, 컴플라이언스, 일정, 하지 않을 것
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 완료 기준 (Definition of Done)
+      description: 에이전트가 스스로 검증할 수 있는 기준 (테스트, 빌드, 스크린샷 등)
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: 예상 위험도
+      options: [low, medium, high]
+    validations:
+      required: true

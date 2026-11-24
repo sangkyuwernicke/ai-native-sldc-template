@@ -1,0 +1,31 @@
+name: rollback
+# 롤백 경로는 미리 연습해 둔다. 이전 커밋 SHA를 입력해 수동 실행.
+on:
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: "되돌릴 대상 커밋 SHA"
+        required: true
+      environment:
+        description: "대상 환경"
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: make build
+      - run: ./scripts/deploy.sh "${{ inputs.environment }}" "${{ inputs.target_sha }}"
