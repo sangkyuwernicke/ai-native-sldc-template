@@ -25,3 +25,19 @@
 - 측정: intent→PR 시간, 1차 통과율, 리뷰 시간, 변경 실패율(DORA).
 
 > `claude-code-action` 의 입력 옵션은 버전에 따라 달라질 수 있으니 [공식 문서](https://github.com/anthropics/claude-code-action)를 확인하세요.
+
+## 배포 설정 (Vercel)
+배포 대상은 환경 변수로 선택합니다. Settings → Environments 에서 `staging`, `production` 각각에 등록하세요.
+
+| 종류 | 이름 | 설명 |
+|---|---|---|
+| Variable | `DEPLOY_TARGET` | `vercel` (미설정이면 로그만 출력하는 stub) |
+| Variable | `VERCEL_ORG_ID` | Vercel 팀/계정 ID (`vercel link` 후 `.vercel/project.json`) |
+| Variable | `VERCEL_PROJECT_ID` | Vercel 프로젝트 ID (같은 파일) |
+| Variable | `VERCEL_CLI_VERSION` | 검증한 Vercel CLI 정확한 버전 (예: `npm view vercel version` 으로 확인). `latest` 금지 |
+| Secret | `VERCEL_TOKEN` | Vercel 계정 토큰 |
+
+- 두 Environment 모두 **Deployment branches 를 보호된 브랜치(main)만** 으로 제한하세요 (`scripts/setup-github.sh` 가 설정). feature 브랜치에서 시크릿이 실행되는 것을 막습니다.
+- production 에서 `DEPLOY_TARGET` 이 비어 있으면 배포가 실패합니다 (fail-closed).
+- staging 은 Vercel preview, production 은 `--prod` 배포입니다.
+- 배포 대상을 늘리려면 `scripts/deploy.sh` 의 `case` 에 분기를 추가하세요.

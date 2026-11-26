@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       target_sha:
-        description: "되돌릴 대상 커밋 SHA"
+        description: "되돌릴 대상 커밋의 전체 SHA (40자리 16진수, 기본 브랜치 이력에 있어야 함)"
         required: true
       environment:
         description: "대상 환경"
@@ -15,17 +15,75 @@ on:
 permissions:
   contents: read
 
+# deploy 워크플로와 같은 그룹으로 직렬화 (배포와 롤백이 동시에 실행되어 경합하는 것을 방지)
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
 jobs:
+  # feature 브랜치에서 dispatch 하면 그 브랜치의 워크플로/스크립트가 시크릿과 함께 실행되므로 기본 브랜치에서만 허용.
+  # job 조건(if)으로 skip 하면 초록/회색으로 보여 "롤백됨"으로 오해할 수 있어, 명시적으로 실패시킨다.
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require default branch
+        env:
+          REF: ${{ github.ref }}
+          DEFAULT_REF: refs/heads/${{ github.event.repository.default_branch }}
+        run: '[ "$REF" = "$DEFAULT_REF" ] || { echo "::error::롤백은 기본 브랜치에서만 실행할 수 있습니다 (현재: $REF)"; exit 1; }'
+
   rollback:
+    needs: guard
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
+      # 1) 형식 검증을 가장 먼저: 브랜치/태그 이름 같은 임의의 ref 는 체크아웃하기 전에 거부
+      - name: Validate target SHA format
+        env:
+          TARGET_SHA: ${{ inputs.target_sha }}
+        run: '[[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::40자리 전체 SHA 가 필요합니다"; exit 1; }'
+
+      # 2) 배포 스크립트는 이 워크플로가 실행된 커밋의 것을 쓴다.
+      #    (대상 SHA 시점의 오래된 deploy.sh 가 실행되어 배포 없이 성공 처리되는 것을 방지)
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: tooling
+          fetch-depth: 0
+          persist-credentials: false
+
+      # 3) 리뷰/머지된 코드만 허용: 대상 SHA 가 기본 브랜치의 조상이어야 한다.
+      #    (포크 PR 등 리뷰되지 않은 커밋이 VERCEL_TOKEN 이 있는 환경에서 빌드되는 것을 차단)
+      - name: Verify target SHA is on the default branch
+        working-directory: tooling
+        env:
+          TARGET_SHA: ${{ inputs.target_sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git cat-file -e "${TARGET_SHA}^{commit}" || { echo "::error::저장소에 없는 커밋입니다"; exit 1; }
+          git merge-base --is-ancestor "$TARGET_SHA" "origin/${DEFAULT_BRANCH}" \
+            || { echo "::error::대상 SHA 가 ${DEFAULT_BRANCH} 이력에 없습니다 (리뷰되지 않은 커밋)"; exit 1; }
+
+      # 4) 앱 소스만 되돌릴 SHA 로 체크아웃
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.target_sha }}
-      - uses: actions/setup-python@v5
+          path: app
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
-      - run: pip install -r requirements-dev.txt
-      - run: make build
-      - run: ./scripts/deploy.sh "${{ inputs.environment }}" "${{ inputs.target_sha }}"
+          node-version: "20"
+
+      - name: Redeploy target SHA
+        working-directory: app
+        env:
+          DEPLOY_TARGET: ${{ vars.DEPLOY_TARGET }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_CLI_VERSION: ${{ vars.VERCEL_CLI_VERSION }}
+          # 입력값은 run 스크립트에 직접 보간하지 않고 env 로 전달 (스크립트 인젝션 방지)
+          TARGET_SHA: ${{ inputs.target_sha }}
+          TARGET_ENV: ${{ inputs.environment }}
+        run: ../tooling/scripts/deploy.sh "$TARGET_ENV" "$TARGET_SHA"
