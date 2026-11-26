@@ -14,3 +14,7 @@ def test_greet():
 def test_greet_empty():
     with pytest.raises(ValueError):
         greet("  ")
+
+
+def test_greet_korean_name():
+    assert greet("지민") == "Hello, 지민!"
