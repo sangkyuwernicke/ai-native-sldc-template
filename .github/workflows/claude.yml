@@ -26,8 +26,12 @@ jobs:
         with:
           fetch-depth: 1
       - uses: anthropics/claude-code-action@v1
+        env:
+          # 요청을 Anthropic 대신 OpenRouter 로 보냄 (/api, 끝에 /v1 붙이지 말 것)
+          ANTHROPIC_BASE_URL: https://openrouter.ai/api
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # OpenRouter 키를 anthropic_api_key 입력으로 전달 (액션이 인증 값으로 사용)
+          anthropic_api_key: ${{ secrets.OPENROUTER_API_KEY }}
           # 구현 전 plan.md 를 먼저 올려 승인받도록 유도
           claude_args: |
             --append-system-prompt "구현 전에 docs/plans/<이슈번호>-plan.md 를 작성해 PR 코멘트로 승인을 요청하고, 승인 후 구현하라. CLAUDE.md 의 검증 명령을 모두 통과시켜라."
