@@ -14,7 +14,7 @@
 | Maintain | intent 이슈 | `maintain.yml` (주간 스캔 → intent 이슈 → `@claude`) |
 
 ## 설정 순서
-1. 레포 시크릿 `ANTHROPIC_API_KEY` 등록 (또는 Claude GitHub App 설치: Claude Code에서 `/install-github-app`)
+1. 레포 시크릿 `OPENROUTER_API_KEY` 등록 (OpenRouter 경유). Anthropic 직접 사용 시에는 두 워크플로의 `anthropic_api_key` 를 `secrets.ANTHROPIC_API_KEY` 로 바꾸고 `ANTHROPIC_BASE_URL` env 를 제거
 2. `./scripts/setup-github.sh OWNER/REPO $(gh api users/<login> --jq .id)` 로 브랜치 보호, 환경 승인, 라벨 적용
 3. `scripts/deploy.sh` 를 실제 배포 명령으로 교체
 4. 이슈를 `Intent` 템플릿으로 만들고 `@claude` 로 시작
