@@ -17,6 +17,8 @@ permissions:
 
 jobs:
   rollback:
+    # feature 브랜치에서 dispatch 하면 그 브랜치의 워크플로/스크립트가 시크릿과 함께 실행되므로 기본 브랜치에서만 허용
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:

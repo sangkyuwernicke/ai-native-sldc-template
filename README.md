@@ -37,6 +37,7 @@
 | Variable | `VERCEL_CLI_VERSION` | 검증한 Vercel CLI 정확한 버전 (예: `npm view vercel version` 으로 확인). `latest` 금지 |
 | Secret | `VERCEL_TOKEN` | Vercel 계정 토큰 |
 
+- 두 Environment 모두 **Deployment branches 를 보호된 브랜치(main)만** 으로 제한하세요 (`scripts/setup-github.sh` 가 설정). feature 브랜치에서 시크릿이 실행되는 것을 막습니다.
 - production 에서 `DEPLOY_TARGET` 이 비어 있으면 배포가 실패합니다 (fail-closed).
 - staging 은 Vercel preview, production 은 `--prod` 배포입니다.
 - 배포 대상을 늘리려면 `scripts/deploy.sh` 의 `case` 에 분기를 추가하세요.

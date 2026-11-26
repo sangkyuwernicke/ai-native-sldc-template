@@ -40,10 +40,11 @@ case "$TARGET" in
     else
       VERCEL_ENV="preview"; PROD_FLAG=""
     fi
+    # 토큰은 VERCEL_TOKEN 환경 변수로만 전달 (--token 인자는 ps 에 노출되므로 사용하지 않음)
     echo "Deploying ${SHA} to Vercel (${VERCEL_ENV}) ..."
-    $VERCEL pull --yes --environment="$VERCEL_ENV" --token="$VERCEL_TOKEN"
-    $VERCEL build $PROD_FLAG --token="$VERCEL_TOKEN"
-    URL=$($VERCEL deploy --prebuilt $PROD_FLAG --token="$VERCEL_TOKEN" \
+    $VERCEL pull --yes --environment="$VERCEL_ENV"
+    $VERCEL build $PROD_FLAG
+    URL=$($VERCEL deploy --prebuilt $PROD_FLAG \
       --meta githubCommitSha="$SHA" --meta githubEnvironment="$ENV_NAME")
     echo "Deployed: $URL"
     [ -z "${GITHUB_OUTPUT:-}" ] || echo "url=$URL" >> "$GITHUB_OUTPUT"

@@ -14,7 +14,10 @@ for l in "intent:0E8A16" "risk:high:B60205" "risk:low:0E8A16"; do
 done
 
 echo "== environments"
-gh api -X PUT "repos/$REPO/environments/staging" >/dev/null
+gh api -X PUT "repos/$REPO/environments/staging" \
+  --input - >/dev/null <<EOF
+{"deployment_branch_policy":{"protected_branches":true,"custom_branch_policies":false}}
+EOF
 gh api -X PUT "repos/$REPO/environments/production" \
   --input - >/dev/null <<EOF
 {"reviewers":[{"type":"User","id":$REVIEWER_ID}],"deployment_branch_policy":{"protected_branches":true,"custom_branch_policies":false}}
