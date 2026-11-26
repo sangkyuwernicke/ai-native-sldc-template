@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       target_sha:
-        description: "되돌릴 대상 커밋 SHA"
+        description: "되돌릴 대상 커밋 SHA (7~40자리 16진수)"
         required: true
       environment:
         description: "대상 환경"
@@ -20,21 +20,30 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
+      # 배포 스크립트는 이 워크플로가 실행된 커밋의 것을 쓴다.
+      # (대상 SHA 시점의 오래된 deploy.sh 가 실행되어 배포 없이 성공 처리되는 것을 방지)
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: tooling
+      # 앱 소스만 되돌릴 SHA 로 체크아웃
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.target_sha }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install -r requirements-dev.txt
-      - run: make build
+          path: app
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
       - name: Redeploy target SHA
+        working-directory: app
         env:
           DEPLOY_TARGET: ${{ vars.DEPLOY_TARGET }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
-        run: ./scripts/deploy.sh "${{ inputs.environment }}" "${{ inputs.target_sha }}"
+          # 입력값은 run 스크립트에 직접 보간하지 않고 env 로 전달 (스크립트 인젝션 방지)
+          TARGET_SHA: ${{ inputs.target_sha }}
+          TARGET_ENV: ${{ inputs.environment }}
+        run: |
+          [[ "$TARGET_SHA" =~ ^[0-9a-f]{7,40}$ ]] || { echo "::error::invalid sha"; exit 1; }
+          ../tooling/scripts/deploy.sh "$TARGET_ENV" "$TARGET_SHA"
