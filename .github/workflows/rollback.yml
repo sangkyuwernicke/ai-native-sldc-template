@@ -21,9 +21,19 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # feature 브랜치에서 dispatch 하면 그 브랜치의 워크플로/스크립트가 시크릿과 함께 실행되므로 기본 브랜치에서만 허용.
+  # job 조건(if)으로 skip 하면 초록/회색으로 보여 "롤백됨"으로 오해할 수 있어, 명시적으로 실패시킨다.
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require default branch
+        env:
+          REF: ${{ github.ref }}
+          DEFAULT_REF: refs/heads/${{ github.event.repository.default_branch }}
+        run: '[ "$REF" = "$DEFAULT_REF" ] || { echo "::error::롤백은 기본 브랜치에서만 실행할 수 있습니다 (현재: $REF)"; exit 1; }'
+
   rollback:
-    # feature 브랜치에서 dispatch 하면 그 브랜치의 워크플로/스크립트가 시크릿과 함께 실행되므로 기본 브랜치에서만 허용
-    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    needs: guard
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
