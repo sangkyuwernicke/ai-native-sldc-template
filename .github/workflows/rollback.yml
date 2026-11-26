@@ -15,6 +15,11 @@ on:
 permissions:
   contents: read
 
+# deploy 워크플로와 같은 그룹으로 직렬화 (배포와 롤백이 동시에 실행되어 경합하는 것을 방지)
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
 jobs:
   rollback:
     # feature 브랜치에서 dispatch 하면 그 브랜치의 워크플로/스크립트가 시크릿과 함께 실행되므로 기본 브랜치에서만 허용

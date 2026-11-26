@@ -32,6 +32,11 @@ require() {
 case "$TARGET" in
   vercel)
     require VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID VERCEL_CLI_VERSION
+    # latest, ^33, *, 공백 포함 값 등 고정되지 않은/비정상 값은 거부 (정확한 semver 만 허용)
+    if ! [[ "$VERCEL_CLI_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      echo "::error::VERCEL_CLI_VERSION 은 정확한 semver(예: 1.2.3)여야 합니다: $VERCEL_CLI_VERSION" >&2
+      exit 1
+    fi
     # CLI 버전은 반드시 고정한다 (토큰과 함께 실행되므로 latest 금지, 공급망 위험)
     VERCEL="npx --yes vercel@${VERCEL_CLI_VERSION}"
     # production 환경은 --prod, 그 외(staging)는 preview 배포
