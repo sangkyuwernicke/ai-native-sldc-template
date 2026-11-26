@@ -28,4 +28,13 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements-dev.txt
       - run: make build
-      - run: ./scripts/deploy.sh "${{ inputs.environment }}" "${{ inputs.target_sha }}"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Redeploy target SHA
+        env:
+          DEPLOY_TARGET: ${{ vars.DEPLOY_TARGET }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: ./scripts/deploy.sh "${{ inputs.environment }}" "${{ inputs.target_sha }}"
