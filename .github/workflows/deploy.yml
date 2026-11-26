@@ -36,6 +36,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_CLI_VERSION: ${{ vars.VERCEL_CLI_VERSION }}
         run: ./scripts/deploy.sh staging "${{ github.sha }}"
 
   production:
@@ -59,4 +60,5 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_CLI_VERSION: ${{ vars.VERCEL_CLI_VERSION }}
         run: ./scripts/deploy.sh production "${{ github.sha }}"

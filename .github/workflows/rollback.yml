@@ -41,6 +41,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_CLI_VERSION: ${{ vars.VERCEL_CLI_VERSION }}
           # 입력값은 run 스크립트에 직접 보간하지 않고 env 로 전달 (스크립트 인젝션 방지)
           TARGET_SHA: ${{ inputs.target_sha }}
           TARGET_ENV: ${{ inputs.environment }}

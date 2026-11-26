@@ -34,7 +34,9 @@
 | Variable | `DEPLOY_TARGET` | `vercel` (미설정이면 로그만 출력하는 stub) |
 | Variable | `VERCEL_ORG_ID` | Vercel 팀/계정 ID (`vercel link` 후 `.vercel/project.json`) |
 | Variable | `VERCEL_PROJECT_ID` | Vercel 프로젝트 ID (같은 파일) |
+| Variable | `VERCEL_CLI_VERSION` | 검증한 Vercel CLI 정확한 버전 (예: `npm view vercel version` 으로 확인). `latest` 금지 |
 | Secret | `VERCEL_TOKEN` | Vercel 계정 토큰 |
 
+- production 에서 `DEPLOY_TARGET` 이 비어 있으면 배포가 실패합니다 (fail-closed).
 - staging 은 Vercel preview, production 은 `--prod` 배포입니다.
 - 배포 대상을 늘리려면 `scripts/deploy.sh` 의 `case` 에 분기를 추가하세요.
